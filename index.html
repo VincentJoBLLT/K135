@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conformité Tertiaire • Simulateur Décret 2019-771</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');
+        
+        :root {
+            --tw-color-primary: #0ea5e9;
+        }
+        
+        * {
+            transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 150ms;
+        }
+        
+        .tail-container * {
+            font-family: 'Inter', system_ui, sans-serif;
+        }
+        
+        .heading {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .card {
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+        }
+        
+        .chart-container {
+            position: relative;
+        }
+    </style>
+</head>
+<body class="tail-container bg-slate-950 text-slate-200">
+    <!-- HEADER - McKinsey ultra-pro -->
+    <div class="border-b border-white/10 bg-white/5 backdrop-blur-xl sticky top-0 z-50">
+        <div class="max-w-screen-2xl mx-auto px-8 py-5 flex items-center justify-between">
+            <div class="flex items-center gap-x-3">
+                <!-- Logo stylisé -->
+                <div class="w-9 h-9 bg-sky-500 rounded-2xl flex items-center justify-center text-white font-bold text-2xl leading-none pt-px">📉</div>
+                <div>
+                    <h1 class="heading text-3xl tracking-[-1px]">Conformité Tertiaire</h1>
+                    <p class="text-xs text-slate-400 -mt-1 tracking-[0.5px]">Décret n°2019-771 • Outil McKinsey</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-x-8 text-sm font-medium">
+                <a href="#" onclick="resetApp()" class="flex items-center gap-x-1 hover:text-sky-400">
+                    <span class="text-lg">⟳</span>
+                    Réinitialiser
+                </a>
+                <div class="flex items-center gap-x-1.5 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-3xl text-xs uppercase tracking-widest font-semibold">
+                    <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                    SIMULATION LOCALE • 100% OFFLINE
+                </div>
+                <div class="text-slate-400 text-xs flex items-center gap-x-2">
+                    <span class="px-3 py-1 bg-slate-900 rounded-3xl">2030</span>
+                    <span class="font-mono text-emerald-400">-40 %</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-x-2 text-xs uppercase font-semibold text-slate-400">
+                <span>Prêt à déployer</span>
+                <div class="px-3 py-1 bg-emerald-400 text-slate-950 rounded-3xl flex items-center">LIVE</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-screen-2xl mx-auto px-8 py-8">
+        <div class="flex justify-between items-baseline mb-8">
+            <div>
+                <h2 class="heading text-5xl tracking-[-2px] text-white">Simulateur Décret Tertiaire</h2>
+                <p class="text-xl text-slate-400 mt-2 max-w-md">Atteignez votre objectif de réduction de 40 % d’ici 2030 et évitez toute amende.</p>
+            </div>
+            
+            <!-- Indicateur de conformité global -->
+            <div id="global-status" class="hidden flex items-center gap-x-3 bg-slate-900 border border-slate-700 rounded-3xl px-6 py-3 text-sm font-semibold">
+                <!-- JS injecte ici -->
+            </div>
+        </div>
+
+        <div class="grid grid-cols-12 gap-6">
+            
+            <!-- COLONNE GAUCHE : SAISIE + LEVIERS -->
+            <div class="col-span-12 lg:col-span-5 space-y-6">
+                
+                <!-- 1. FORMULAIRE -->
+                <div class="card bg-white/10 backdrop-blur-3xl border border-white/10 rounded-3xl p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-x-3">
+                            <span class="text-2xl">📐</span>
+                            <h3 class="text-2xl font-semibold">Données du bâtiment</h3>
+                        </div>
+                        <span id="surface-warning" class="text-amber-400 text-xs px-3 py-1 bg-amber-400/10 rounded-3xl hidden">Surface &gt; 1000 m² obligatoire</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-2">Surface utile (m²)</label>
+                            <div class="relative">
+                                <input 
+                                    id="surface"
+                                    type="number" 
+                                    value="4500"
+                                    class="w-full bg-white/10 border border-white/20 focus:border-sky-400 rounded-2xl px-6 py-5 text-3xl font-mono font-semibold outline-none">
+                                <span class="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 text-xl">m²</span>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-2">Consommation de référence (kWh/an)</label>
+                            <div class="relative">
+                                <input 
+                                    id="consommation"
+                                    type="number" 
+                                    value="1850000"
+                                    class="w-full bg-white/10 border border-white/20 focus:border-sky-400 rounded-2xl px-6 py-5 text-3xl font-mono font-semibold outline-none">
+                                <span class="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 text-xl">kWh</span>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-2">Consommation actuelle = Consommation de référence</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. LEVIERS D'ACTION -->
+                <div class="card bg-white/10 backdrop-blur-3xl border border-white/10 rounded-3xl p-8">
+                    <div class="flex items-center gap-x-3 mb-6">
+                        <span class="text-2xl">⚡</span>
+                        <h3 class="text-2xl font-semibold">Leviers d’action</h3>
+                        <span class="text-xs bg-sky-400 text-white px-3 rounded-3xl py-px font-medium">Cochez pour simuler</span>
+                    </div>
+                    
+                    <div class="space-y-4" id="leviers-container">
+                        <!-- Isolation -->
+                        <label onclick="toggleLever(this)" class="lever-item flex items-center justify-between bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/20 rounded-3xl p-5 cursor-pointer">
+                            <div class="flex items-center gap-x-4">
+                                <input type="checkbox" id="lever-isolation" class="w-6 h-6 accent-emerald-400">
+                                <div>
+                                    <p class="font-semibold text-lg">Isolation thermique</p>
+                                    <p class="text-sm text-emerald-400">-20 % de consommation</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-slate-400">Coût</p>
+                                <p id="cost-isolation" class="font-mono font-semibold text-xl">225 000 €</p>
+                            </div>
+                        </label>
+                        
+                        <!-- LED -->
+                        <label onclick="toggleLever(this)" class="lever-item flex items-center justify-between bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/20 rounded-3xl p-5 cursor-pointer">
+                            <div class="flex items-center gap-x-4">
+                                <input type="checkbox" id="lever-led" class="w-6 h-6 accent-emerald-400">
+                                <div>
+                                    <p class="font-semibold text-lg">Remplacement par LED</p>
+                                    <p class="text-sm text-emerald-400">-5 % de consommation</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-slate-400">Coût</p>
+                                <p id="cost-led" class="font-mono font-semibold text-xl">45 000 €</p>
+                            </div>
+                        </label>
+                        
+                        <!-- Solaire -->
+                        <label onclick="toggleLever(this)" class="lever-item flex items-center justify-between bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/20 rounded-3xl p-5 cursor-pointer">
+                            <div class="flex items-center gap-x-4">
+                                <input type="checkbox" id="lever-solaire" class="w-6 h-6 accent-emerald-400">
+                                <div>
+                                    <p class="font-semibold text-lg">Installation photovoltaïque</p>
+                                    <p class="text-sm text-emerald-400">-15 % de consommation</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-slate-400">Coût</p>
+                                <p id="cost-solaire" class="font-mono font-semibold text-xl">15 000 €</p>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <p class="text-xs text-slate-400 mt-6 text-center">Les réductions sont cumulatives et appliquées immédiatement. Coûts estimés 2026.</p>
+                </div>
+            </div>
+            
+            <!-- COLONNE DROITE : RÉSULTATS + GRAPH -->
+            <div class="col-span-12 lg:col-span-7 space-y-6">
+                
+                <!-- KPIs -->
+                <div class="grid grid-cols-3 gap-6">
+                    <!-- Objectif 2030 -->
+                    <div class="card bg-gradient-to-br from-sky-500/10 to-transparent border border-sky-400/30 rounded-3xl p-6">
+                        <p class="uppercase text-xs font-semibold tracking-widest text-sky-400">Objectif 2030</p>
+                        <div id="objectif-display" class="mt-4 text-5xl font-mono font-semibold text-white">1 110 000 kWh/an</div>
+                        <p class="text-sm text-slate-400 mt-1">−40 % de la consommation de référence</p>
+                    </div>
+                    
+                    <!-- Consommation projetée -->
+                    <div class="card bg-gradient-to-br from-emerald-400/10 to-transparent border border-emerald-400/30 rounded-3xl p-6">
+                        <p class="uppercase text-xs font-semibold tracking-widest text-emerald-400">Après leviers</p>
+                        <div id="projetee-display" class="mt-4 text-5xl font-mono font-semibold text-white">1 110 000 kWh/an</div>
+                        <div id="reduction-pct" class="text-sm mt-1 flex items-center gap-x-2">
+                            <span class="text-emerald-400 font-semibold">−40 %</span>
+                            <span class="text-slate-400">réduction totale</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Investissement -->
+                    <div class="card bg-white/10 border border-white/10 rounded-3xl p-6">
+                        <p class="uppercase text-xs font-semibold tracking-widest">Investissement total</p>
+                        <div id="investissement-display" class="mt-4 text-5xl font-mono font-semibold text-white">285 000 €</div>
+                        <p class="text-xs text-slate-400 mt-3">Retour sur investissement estimé en 4-6 ans via économies énergétiques</p>
+                    </div>
+                </div>
+                
+                <!-- Statut conformité + Amende -->
+                <div id="conformite-card" class="card rounded-3xl p-8 flex items-center gap-x-6 border-2">
+                    <!-- JS injecte le contenu complet (couleur + texte) -->
+                    <div id="conformite-content" class="flex-1">
+                        <!-- Dynamique -->
+                    </div>
+                </div>
+                
+                <!-- 4. GRAPHIQUE DYNAMIQUE -->
+                <div class="card bg-white/10 backdrop-blur-3xl border border-white/10 rounded-3xl p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-x-3">
+                            <span class="text-2xl">📈</span>
+                            <h3 class="text-2xl font-semibold">Trajectoire 2026 → 2030</h3>
+                        </div>
+                        <div class="text-xs flex items-center gap-x-5">
+                            <div class="flex items-center gap-x-2">
+                                <div class="w-3 h-px bg-slate-400"></div>
+                                <span class="text-slate-400">Sans action</span>
+                            </div>
+                            <div class="flex items-center gap-x-2">
+                                <div class="w-3 h-px bg-emerald-400"></div>
+                                <span class="text-emerald-400">Avec leviers</span>
+                            </div>
+                            <div class="flex items-center gap-x-2">
+                                <div class="w-3 h-px border border-dashed border-red-400"></div>
+                                <span class="text-red-400">Objectif réglementaire</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container h-96">
+                        <canvas id="trajectoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- FOOTER INFO -->
+        <div class="mt-12 text-center text-xs text-slate-400 flex items-center justify-center gap-x-6">
+            <div>✅ 100 % JavaScript • Aucun backend</div>
+            <div>•</div>
+            <div>Données simulées • Conformité Décret Tertiaire</div>
+            <div>•</div>
+            <div class="flex items-center gap-x-1">Version consultant McKinsey <span class="text-emerald-400">v1.2</span></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration Tailwind
+        function initializeTailwind() {
+            tailwind.config = {
+                content: [],
+                theme: {
+                    extend: {}
+                }
+            }
+        }
+
+        // Variables globales
+        let chartInstance = null
+        let currentSurface = 4500
+        let currentConsommation = 1850000
+
+        // Leviers (données statiques)
+        const leversData = {
+            isolation: { reduction: 20, costPerM2: 50, fixed: false, label: "Isolation thermique" },
+            led: { reduction: 5, costPerM2: 10, fixed: false, label: "Remplacement LED" },
+            solaire: { reduction: 15, costPerM2: 0, fixed: 15000, label: "Solaire" }
+        }
+
+        // Mise à jour des coûts unitaires affichés dans les leviers
+        function updateLeverCosts() {
+            const surface = parseFloat(document.getElementById('surface').value) || 4500
+            
+            // Isolation
+            const costIsolation = Math.round(50 * surface)
+            document.getElementById('cost-isolation').textContent = costIsolation.toLocaleString('fr-FR') + ' €'
+            
+            // LED
+            const costLed = Math.round(10 * surface)
+            document.getElementById('cost-led').textContent = costLed.toLocaleString('fr-FR') + ' €'
+            
+            // Solaire (fixe)
+            document.getElementById('cost-solaire').textContent = '15 000 €'
+        }
+
+        // Récupération des leviers cochés
+        function getSelectedLevers() {
+            const selected = []
+            let totalReduction = 0
+            let totalCost = 0
+            
+            if (document.getElementById('lever-isolation').checked) {
+                totalReduction += leversData.isolation.reduction
+                totalCost += leversData.isolation.costPerM2 * currentSurface
+            }
+            if (document.getElementById('lever-led').checked) {
+                totalReduction += leversData.led.reduction
+                totalCost += leversData.led.costPerM2 * currentSurface
+            }
+            if (document.getElementById('lever-solaire').checked) {
+                totalReduction += leversData.solaire.reduction
+                totalCost += leversData.solaire.fixed
+            }
+            
+            return { totalReduction, totalCost, selected }
+        }
+
+        // Calcul principal
+        function calculate() {
+            currentSurface = parseFloat(document.getElementById('surface').value) || 0
+            currentConsommation = parseFloat(document.getElementById('consommation').value) || 0
+            
+            // Validation surface
+            const warningEl = document.getElementById('surface-warning')
+            if (currentSurface < 1001) {
+                warningEl.classList.remove('hidden')
+            } else {
+                warningEl.classList.add('hidden')
+            }
+            
+            const { totalReduction, totalCost } = getSelectedLevers()
+            
+            // Objectif 2030 = référence × 0.6
+            const objectif = Math.round(currentConsommation * 0.6)
+            
+            // Consommation projetée
+            const projetee = Math.round(currentConsommation * (1 - totalReduction / 100))
+            
+            // Mise à jour des KPIs
+            document.getElementById('objectif-display').innerHTML = `
+                ${objectif.toLocaleString('fr-FR')} <span class="text-2xl text-slate-400">kWh/an</span>
+            `
+            document.getElementById('projetee-display').innerHTML = `
+                ${projetee.toLocaleString('fr-FR')} <span class="text-2xl text-slate-400">kWh/an</span>
+            `
+            document.getElementById('investissement-display').innerHTML = `
+                ${totalCost.toLocaleString('fr-FR')} <span class="text-2xl text-slate-400">€</span>
+            `
+            
+            // % de réduction
+            const reductionPctEl = document.getElementById('reduction-pct')
+            reductionPctEl.innerHTML = `
+                <span class="text-emerald-400 font-semibold">−${totalReduction} %</span>
+                <span class="text-slate-400 ml-2">réduction totale</span>
+                ${totalReduction >= 40 ? '<span class="ml-3 text-xs px-2 py-px bg-emerald-400 text-slate-950 rounded-2xl">OBJECTIF ATTEINT</span>' : ''}
+            `
+            // Conformité + Amende
+            const isCompliant = projetee <= objectif
+            const conformiteCard = document.getElementById('conformite-card')
+            const content = document.getElementById('conformite-content')
+            
+            if (isCompliant) {
+                conformiteCard.style.borderColor = '#10b981'
+                content.innerHTML = `
+                    <div class="flex items-center gap-x-4">
+                        <div class="text-7xl">✅</div>
+                        <div>
+                            <p class="text-3xl font-semibold text-emerald-400">Conforme à l’objectif 2030</p>
+                            <p class="text-slate-400">Votre bâtiment respecte le Décret Tertiaire.</p>
+                        </div>
+                    </div>
+                    <div class="ml-auto text-right">
+                        <p class="text-emerald-400 text-4xl font-mono">0 €</p>
+                        <p class="text-xs uppercase tracking-widest">Aucune amende encourue</p>
+                    </div>
+                `
+            } else {
+                const amendeMax = Math.round(currentSurface * 1500)
+                conformiteCard.style.borderColor = '#ef4444'
+                content.innerHTML = `
+                    <div class="flex items-center gap-x-4">
+                        <div class="text-7xl">❌</div>
+                        <div>
+                            <p class="text-3xl font-semibold text-red-400">Non conforme</p>
+                            <p class="text-slate-400">Objectif 2030 non atteint.</p>
+                        </div>
+                    </div>
+                    <div class="ml-auto text-right">
+                        <p class="text-red-400 text-4xl font-mono">${amendeMax.toLocaleString('fr-FR')} €</p>
+                        <p class="text-xs uppercase tracking-widest">Amende maximale encourue*<br><span class="text-[10px]">(1 500 €/m² – article L.175-1 Code de l’énergie)</span></p>
+                    </div>
+                `
+            }
+            
+            // Mise à jour du statut global en haut
+            const globalStatus = document.getElementById('global-status')
+            globalStatus.classList.remove('hidden')
+            globalStatus.innerHTML = isCompliant 
+                ? `<div class="text-emerald-400 text-2xl">✅ CONFORME</div><div class="text-xs">Vous êtes en règle pour 2030</div>` 
+                : `<div class="text-red-400 text-2xl">⚠️ NON CONFORME</div><div class="text-xs">Risque d’amende immédiate</div>`
+            
+            // Mise à jour du graphique
+            renderChart(objectif, projetee, currentConsommation)
+            
+            // Mise à jour des coûts des leviers
+            updateLeverCosts()
+        }
+
+        // Rendu du graphique Chart.js
+        function renderChart(objectif, projetee, reference) {
+            const ctx = document.getElementById('trajectoryChart')
+            
+            if (chartInstance) {
+                chartInstance.destroy()
+            }
+            
+            const years = ['2026', '2027', '2028', '2029', '2030']
+            
+            // Sans action → plat
+            const withoutAction = Array(5).fill(reference)
+            
+            // Avec leviers → chute immédiate dès 2027
+            const withAction = [reference, projetee, projetee, projetee, projetee]
+            
+            // Objectif constant
+            const objectiveLine = Array(5).fill(objectif)
+            
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [
+                        {
+                            label: 'Sans action',
+                            data: withoutAction,
+                            borderColor: '#64748b',
+                            borderWidth: 2,
+                            tension: 0.1,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Avec leviers sélectionnés',
+                            data: withAction,
+                            borderColor: '#10b981',
+                            borderWidth: 5,
+                            tension: 0.2,
+                            pointBackgroundColor: '#fff',
+                            pointBorderWidth: 3
+                        },
+                        {
+                            label: 'Objectif 2030',
+                            data: objectiveLine,
+                            borderColor: '#ef4444',
+                            borderDash: [8, 4],
+                            borderWidth: 3,
+                            tension: 0,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: '#0f172a',
+                            titleColor: '#fff',
+                            bodyColor: '#e2e8f0',
+                            displayColors: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#334155' },
+                            ticks: {
+                                color: '#64748b',
+                                font: { size: 13 },
+                                callback: function(value) { return value.toLocaleString('fr-FR') + ' kWh' }
+                            }
+                        },
+                        x: {
+                            grid: { color: '#334155' },
+                            ticks: { color: '#64748b', font: { size: 14, weight: '600' } }
+                        }
+                    }
+                }
+            })
+        }
+
+        // Toggle des leviers (clic sur toute la ligne)
+        function toggleLever(el) {
+            const checkbox = el.querySelector('input[type="checkbox"]')
+            checkbox.checked = !checkbox.checked
+            calculate()
+        }
+
+        // Réinitialisation complète
+        function resetApp() {
+            document.getElementById('surface').value = 4500
+            document.getElementById('consommation').value = 1850000
+            document.getElementById('lever-isolation').checked = false
+            document.getElementById('lever-led').checked = false
+            document.getElementById('lever-solaire').checked = false
+            calculate()
+        }
+
+        // Initialisation de l’application
+        function initApp() {
+            initializeTailwind()
+            
+            // Écouteurs sur tous les champs
+            const inputs = ['surface', 'consommation']
+            inputs.forEach(id => {
+                const el = document.getElementById(id)
+                el.addEventListener('input', calculate)
+            })
+            
+            // Leviers
+            const checkboxes = document.querySelectorAll('#leviers-container input[type="checkbox"]')
+            checkboxes.forEach(cb => cb.addEventListener('change', calculate))
+            
+            // Premier calcul
+            calculate()
+            
+            console.log('%c✅ Simulateur Décret Tertiaire chargé – tout est local', 'background:#0ea5e9;color:#fff;padding:2px 6px;border-radius:4px;font-size:10px')
+        }
+        
+        // Lancement
+        window.onload = initApp
+    </script>
+</body>
+</html>
